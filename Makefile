@@ -1,12 +1,12 @@
 all: clean build
 
-PLUGIN_LOCATION = ~/.local/share/gnome-shell/extensions/utcclock@injcristianrojas.github.com
+PLUGIN_LOCATION = ~/.local/share/gnome-shell/extensions/cetclock@leskunberg.github.com
 
 compile-schemas:
 	glib-compile-schemas schemas/
 
 build: compile-schemas
-	zip utcclock.zip extension.js LICENSE metadata.json schemas/*
+	zip cetclock.zip extension.js LICENSE metadata.json schemas/*
 
 install: compile-schemas
 	mkdir -p $(PLUGIN_LOCATION)

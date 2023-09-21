@@ -1,10 +1,10 @@
 {
-    "name": "UTCClock",
-    "description": "UTC clock for the top bar",
-    "url": "https://github.com/injcristianrojas/UTCClock",
-    "uuid": "utcclock@injcristianrojas.github.com",
-    "settings-schema": "org.gnome.shell.extensions.utcclock",
-    "gettext-domain": "UTCClock",
+    "name": "CETClock",
+    "description": "CET clock for the top bar",
+    "url": "https://github.com/leskunberg/CETClock",
+    "uuid": "cetclock@leskunberg.github.com",
+    "settings-schema": "org.gnome.shell.extensions.cetclock",
+    "gettext-domain": "CETClock",
     "donations": {
         "paypal": "injcristianrojas"
     },

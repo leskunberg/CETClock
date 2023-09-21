@@ -1,22 +1,21 @@
 'use strict';
 
-import Clutter from 'gi://Clutter';
-import GnomeDesktop from 'gi://GnomeDesktop';
-import GObject from 'gi://GObject';
-import St from 'gi://St';
-import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+const Clutter = imports.gi.Clutter;
+const ExtensionUtils = imports.misc.extensionUtils;
+const GnomeDesktop = imports.gi.GnomeDesktop;
+const GObject = imports.gi.GObject;
+const Main = imports.ui.main;
+const Me = ExtensionUtils.getCurrentExtension();
+const PanelMenu = imports.ui.panelMenu;
+const PopupMenu = imports.ui.popupMenu;
+const St = imports.gi.St;
+const getSettings = ExtensionUtils.getSettings;
 
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+let CETClock = GObject.registerClass(
+    class CETCLock extends PanelMenu.Button {
 
-let utcclock;
-
-let UTCClock = GObject.registerClass(
-    class UTCCLock extends PanelMenu.Button {
-
-        _init(metadata, settings, gnomesettings) {
-            super._init(0, 'UTCClock', false);
+        _init() {
+            super._init(0, 'CETClock', false);
 
             // Label
             this.timeText = new St.Label({
@@ -28,20 +27,17 @@ let UTCClock = GObject.registerClass(
             topBox.add_actor(this.timeText);
             this.add_actor(topBox);
 
-            this.metadata = metadata;
-            this.settings = settings;
-            this.gnomeSecondsSettings = gnomesettings;
-
             this.enable();
         }
 
         updateTime() {
             let now = new Date();
-            this.timeText.set_text(
-                new Intl.DateTimeFormat(
-                    'default', this.format_params
-                ).format(now) + ' ' + this.time_text
-            );
+            let cetTime = new Intl.DateTimeFormat('default', {
+                ...this.format_params,
+                timeZone: 'Europe/Paris' // Norway is in the CET time zone
+            }).format(now);
+
+            this.timeText.set_text(cetTime + ' ' + this.time_text);
         }
 
         setSecondsDisplayed() {
@@ -102,26 +98,6 @@ let UTCClock = GObject.registerClass(
             });
             this.menu.addMenuItem(this.ClockMenuItemSeconds);
 
-            this.ClockMenuItemText = new PopupMenu.PopupSubMenuMenuItem(
-                'Time text to show'
-            );
-            this.PopupMenuItemUTC = new PopupMenu.PopupMenuItem('UTC');
-            this.menuSignal2 = this.PopupMenuItemUTC.connect('activate', () => {
-                this.settings.set_string('time-text', 'UTC');
-            });
-            this.ClockMenuItemText.menu.addMenuItem(this.PopupMenuItemUTC);
-            this.PopupMenuItemGMT = new PopupMenu.PopupMenuItem('GMT');
-            this.menuSignal3 = this.PopupMenuItemGMT.connect('activate', () => {
-                this.settings.set_string('time-text', 'GMT');
-            });
-            this.ClockMenuItemText.menu.addMenuItem(this.PopupMenuItemGMT);
-            this.PopupMenuItemZ = new PopupMenu.PopupMenuItem('Z');
-            this.menuSignal4 = this.PopupMenuItemZ.connect('activate', () => {
-                this.settings.set_string('time-text', 'Z');
-            });
-            this.ClockMenuItemText.menu.addMenuItem(this.PopupMenuItemZ);
-            this.menu.addMenuItem(this.ClockMenuItemText);
-
             this.ClockMenuItemDate = new PopupMenu.PopupSwitchMenuItem(
                 'Show date',
                 this.settings.get_boolean('show-date'),
@@ -164,14 +140,19 @@ let UTCClock = GObject.registerClass(
         }
 
         enable() {
-            this.time_text = 'UTC';
+            this.time_text = 'CET';
 
             this.format_params = {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false,
-                timeZone: 'UTC',
+                timeZone: 'CET',
             }
+            
+            this.settings = getSettings();
+            this.gnomeSecondsSettings = getSettings(
+                'org.gnome.desktop.interface'
+            );
 
             this.gnomeSecondsSignal =  this.gnomeSecondsSettings.connect('changed::clock-show-seconds', () => {
                 if (!this.gnomeSecondsSettings.get_boolean('clock-show-seconds')) {
@@ -233,9 +214,7 @@ let UTCClock = GObject.registerClass(
             this.settings.disconnect(this.settingsSignals[3]);
             this.settings.disconnect(this.settingsSignals[4]);
             this.ClockMenuItemSeconds.disconnect(this.menuSignal1);
-            this.PopupMenuItemUTC.disconnect(this.menuSignal2);
-            this.PopupMenuItemGMT.disconnect(this.menuSignal3);
-            this.PopupMenuItemZ.disconnect(this.menuSignal4);
+            this.PopupMenuItemCET.disconnect(this.menuSignal2);
             this.ClockMenuItemDate.disconnect(this.menuSignal5);
             this.ClockMenuItemOpacity.disconnect(this.menuSignal6);
             this.ClockMenu12Hour.disconnect(this.menuSignal8);
@@ -244,23 +223,24 @@ let UTCClock = GObject.registerClass(
         }
 
         log_this(string) {
-            console.log(`[${this.metadata.name} v${this.metadata.version}] ${string}`);
+            log(`[${Me.metadata.name} v${Me.metadata.version}] ${string}`);
         }
     }
 );
 
+let cetclock;
 
-export default class WaylandOrX11Extension extends Extension {
+function init() {
+    // Intentional
+}
 
-    enable() {
-        utcclock = new UTCClock(this.metadata, this.getSettings(), this.getSettings('org.gnome.desktop.interface'));
-        Main.panel._addToPanelBox('utcclock', utcclock, 1, Main.panel._centerBox);
-    }
+function enable() {
+    cetclock = new CETClock();
+    Main.panel._addToPanelBox('cetclock', cetclock, 1, Main.panel._centerBox);
+}
 
-    disable() {
-        utcclock.disable();
-        utcclock.destroy();
-        utcclock = null;
-    }
-
+function disable() {
+    cetclock.disable();
+    cetclock.destroy();
+    cetclock = null;
 }

@@ -1,11 +1,11 @@
-<schemalist gettext-domain="UTCClock">
-    <schema id="org.gnome.shell.extensions.utcclock" path="/org/gnome/shell/extensions/utcclock/">
+<schemalist gettext-domain="CETClock">
+    <schema id="org.gnome.shell.extensions.cetclock" path="/org/gnome/shell/extensions/cetclock/">
         <key name="show-seconds" type="b">
             <default>true</default>
             <summary>Show seconds</summary>
         </key>
         <key name="time-text" type="s">
-            <default>"UTC"</default>
+            <default>"CET"</default>
             <summary>Time text</summary>
         </key>
         <key name="show-date" type="b">
